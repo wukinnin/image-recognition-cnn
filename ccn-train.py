@@ -4,10 +4,15 @@ import numpy as np
 import cv2
 from random import shuffle
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.optimizers import Adam
+Sequential = tf.keras.models.Sequential
+Conv2D = tf.keras.layers.Conv2D
+MaxPooling2D = tf.keras.layers.MaxPooling2D
+Dense = tf.keras.layers.Dense
+Dropout = tf.keras.layers.Dropout
+Flatten = tf.keras.layers.Flatten
+
+# Optimizer
+Adam = tf.keras.optimizers.Adam
 
 ## Directories and hyperparameters
 TRAIN_DIR = 'train'
