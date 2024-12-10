@@ -1,5 +1,7 @@
 ## Imports
 import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+import keras
 import numpy as np
 import cv2
 from random import shuffle
@@ -13,6 +15,8 @@ Flatten = tf.keras.layers.Flatten
 
 # Optimizer
 Adam = tf.keras.optimizers.Adam
+
+
 
 ## Directories and hyperparameters
 TRAIN_DIR = 'train'
