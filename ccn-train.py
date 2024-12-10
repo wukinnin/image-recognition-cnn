@@ -16,8 +16,6 @@ Flatten = tf.keras.layers.Flatten
 # Optimizer
 Adam = tf.keras.optimizers.Adam
 
-
-
 ## Directories and hyperparameters
 TRAIN_DIR = 'train'
 IMG_SIZE = 128
@@ -50,10 +48,22 @@ def create_train_data(all_classes, all_labels):
     training_data = []
     for label_index, specific_class in enumerate(all_classes):
         current_dir = os.path.join(TRAIN_DIR, specific_class)
-        print(f'Reading directory of {current_dir}')
+        print(f'Reading directory: {current_dir}')
         for img_filename in os.listdir(current_dir):
             path = os.path.join(current_dir, img_filename)
+            
+            # Ensure only valid image files are processed
+            if not img_filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                print(f"Skipping non-image file: {path}")
+                continue
+            
             img = cv2.imread(path)
+            
+            # Handle failed image loading
+            if img is None:
+                print(f"Warning: Unable to read image at {path}")
+                continue
+            
             img = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
             training_data.append([img, all_labels[label_index]])
     shuffle(training_data)
