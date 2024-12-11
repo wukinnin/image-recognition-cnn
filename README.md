@@ -5,4 +5,4 @@ Requirements:
 - numpy
 - opencv-python
 - tensorflow
-- tflearn
+- keras
