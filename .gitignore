@@ -1,2 +1,4 @@
 /train
 *.jpg
+*.h5
+*.keras
