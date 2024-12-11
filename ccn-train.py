@@ -9,7 +9,6 @@ import tensorflow as tf
 
 from random import shuffle
 from keras import Input
-from keras import save_model
 
 Sequential = tf.keras.models.Sequential
 Conv2D = tf.keras.layers.Conv2D
@@ -112,4 +111,5 @@ model.compile(optimizer=Adam(learning_rate=LR), loss='categorical_crossentropy',
 model.fit(X_train, Y_train, epochs=NUM_EPOCHS, batch_size=32, validation_data=(X_test, Y_test), verbose=1)
 
 # Save the model
-save_model(model, f"{MODEL_NAME}.keras")
+model.save(f"{MODEL_NAME}.keras")
+
