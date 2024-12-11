@@ -1,66 +1,57 @@
 import os
-import numpy as np
-# pip install opencv-python
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
 import cv2
-from random import shuffle
-# Libraries for Image Classification
-import tflearn
-from tflearn.layers.conv import conv_2d, max_pool_2d
-from tflearn.layers.core import input_data, dropout, fully_connected
-from tflearn.layers.estimator import regression
+import numpy as np
+import keras
+import tensorflow
 
-TRAIN_DIR = 'train'
-IMG_SIZE = 145
+from tensorflow.keras.models import load_model
+
+# Parameters
+IMG_SIZE = 128  # Matches the size used in training
 IMAGE_CHANNELS = 3
-FIRST_NUM_CHANNEL = 32
-FILTER_SIZE = 3
-LR = 0.0001
-PERCENT_TRAINING_DATA = 80
-NUM_EPOCHS = 50
-MODEL_NAME = 'animals_cnn'
+MODEL_NAME = 'animals_cnn.keras'  # Saved model file name
+TEST_IMG = 'cat146-test.jpg'  # Test image file
+TRAIN_DIR = 'train'  # Directory containing subdirectories for each class
 
-TEST_IMG = 'cat146-test.jpg'
+# Function to define classes dynamically from training directory
+def define_classes(train_dir):
+    all_classes = []
+    for folder in os.listdir(train_dir):
+        if os.path.isdir(os.path.join(train_dir, folder)):
+            all_classes.append(folder)
+    return sorted(all_classes)  # Ensure consistent class order
 
-def define_classes():
-	all_classes = []
-	for folder in os.listdir(TRAIN_DIR):
-		all_classes.append(folder)
-	return all_classes, len(all_classes)
+# Load the trained model
+if not os.path.exists(MODEL_NAME):
+    raise FileNotFoundError(f"Model file '{MODEL_NAME}' not found. Check the file path.")
+print(f"Loading model: {MODEL_NAME}")
+model = load_model(MODEL_NAME)
 
-def define_labels(all_classes):
-	all_labels = []
-	for x in range(len(all_classes)):
-		all_labels.append(np.array([0. for i in range(len(all_classes))]))
-		all_labels[x][x] = 1
-	return all_labels
+# Get the class labels
+all_classes = define_classes(TRAIN_DIR)
+if not all_classes:
+    raise ValueError(f"No classes found in directory '{TRAIN_DIR}'. Ensure it contains subdirectories for each class.")
+print(f"Classes: {all_classes}")
 
-all_classes, NUM_OUTPUT = define_classes()
-all_labels = define_labels(all_classes)
+# Preprocess the test image
+if not os.path.exists(TEST_IMG):
+    raise FileNotFoundError(f"Test image '{TEST_IMG}' not found. Check the file path.")
+print(f"Loading test image: {TEST_IMG}")
+test_img = cv2.imread(TEST_IMG)
+test_img = cv2.resize(test_img, (IMG_SIZE, IMG_SIZE))  # Resize to match model input
+test_img = test_img.reshape(1, IMG_SIZE, IMG_SIZE, IMAGE_CHANNELS) / 255.0  # Normalize pixel values
 
-# Make the model
-convnet = input_data(shape=[None, IMG_SIZE, IMG_SIZE, IMAGE_CHANNELS], name='input')
-convnet = conv_2d(convnet, FIRST_NUM_CHANNEL, FILTER_SIZE, activation='relu')
-convnet = max_pool_2d(convnet, FILTER_SIZE)
-convnet = conv_2d(convnet, FIRST_NUM_CHANNEL*2, FILTER_SIZE, activation='relu')
-convnet = max_pool_2d(convnet, FILTER_SIZE)
-convnet = conv_2d(convnet, FIRST_NUM_CHANNEL*4, FILTER_SIZE, activation='relu')
-convnet = max_pool_2d(convnet, FILTER_SIZE)
-convnet = conv_2d(convnet, FIRST_NUM_CHANNEL*8, FILTER_SIZE, activation='relu')
-convnet = max_pool_2d(convnet, FILTER_SIZE)
-convnet = fully_connected(convnet, FIRST_NUM_CHANNEL*16, activation='relu')
-convnet = dropout(convnet, 0.8)
-convnet = fully_connected(convnet, NUM_OUTPUT, activation='softmax')
-convnet = regression(convnet, optimizer='adam', learning_rate=LR, loss='categorical_crossentropy', name='targets')
-model = tflearn.DNN(convnet, tensorboard_dir='log')
+# Perform prediction
+predictions = model.predict(test_img)
+predicted_class_index = np.argmax(predictions[0])  # Index of the highest probability
+predicted_class = all_classes[predicted_class_index]
+confidence = predictions[0][predicted_class_index] * 100
 
-print('LOADING MODEL ' + '{}.meta'.format(MODEL_NAME))
-if os.path.exists('{}.meta'.format(MODEL_NAME)):
-	# Load the Model
-	model.load(MODEL_NAME)
-	test_img = cv2.imread(TEST_IMG)
-	test_img = cv2.resize(test_img, (IMG_SIZE, IMG_SIZE))
-	# Classify the image
-	data = test_img.reshape(IMG_SIZE, IMG_SIZE, IMAGE_CHANNELS)
-	data_res_float = model.predict([data])[0]
-	for x in range(len(all_labels)):
-		print(all_classes[x] + ' ' + str(data_res_float[x]))
+# Display the results
+print(f"Predicted Class: {predicted_class}")
+print(f"Confidence: {confidence:.2f}%")
+print("\nClass Probabilities:")
+for i, class_name in enumerate(all_classes):
+    print(f"{class_name}: {predictions[0][i] * 100:.2f}%")
