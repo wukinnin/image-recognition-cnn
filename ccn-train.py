@@ -8,8 +8,8 @@ import cv2
 import tensorflow as tf
 
 from random import shuffle
-from tensorflow.keras.layers import Input
-from keras.saving import save_model
+from keras import Input
+from keras import save_model
 
 Sequential = tf.keras.models.Sequential
 Conv2D = tf.keras.layers.Conv2D
