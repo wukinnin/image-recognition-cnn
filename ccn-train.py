@@ -1,11 +1,16 @@
 ## Imports
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
 import keras
 import numpy as np
 import cv2
-from random import shuffle
 import tensorflow as tf
+
+from random import shuffle
+from tensorflow.keras.layers import Input
+from keras.saving import save_model
+
 Sequential = tf.keras.models.Sequential
 Conv2D = tf.keras.layers.Conv2D
 MaxPooling2D = tf.keras.layers.MaxPooling2D
@@ -84,7 +89,8 @@ Y_test = np.array([i[1] for i in test])
 
 # Build the model
 model = Sequential([
-    Conv2D(FIRST_NUM_CHANNEL, (FILTER_SIZE, FILTER_SIZE), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, IMAGE_CHANNELS)),
+    Input(shape=(IMG_SIZE, IMG_SIZE, IMAGE_CHANNELS)),  # Explicit Input layer
+    Conv2D(FIRST_NUM_CHANNEL, (FILTER_SIZE, FILTER_SIZE), activation='relu'),
     MaxPooling2D(pool_size=(2, 2)),
     Conv2D(FIRST_NUM_CHANNEL * 2, (FILTER_SIZE, FILTER_SIZE), activation='relu'),
     MaxPooling2D(pool_size=(2, 2)),
@@ -98,6 +104,7 @@ model = Sequential([
     Dense(NUM_OUTPUT, activation='softmax')
 ])
 
+
 # Compile the model
 model.compile(optimizer=Adam(learning_rate=LR), loss='categorical_crossentropy', metrics=['accuracy'])
 
@@ -105,4 +112,4 @@ model.compile(optimizer=Adam(learning_rate=LR), loss='categorical_crossentropy',
 model.fit(X_train, Y_train, epochs=NUM_EPOCHS, batch_size=32, validation_data=(X_test, Y_test), verbose=1)
 
 # Save the model
-model.save(f"{MODEL_NAME}.h5")
+save_model(model, f"{MODEL_NAME}.keras")
